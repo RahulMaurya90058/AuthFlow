@@ -4,6 +4,10 @@
   "description": "Reusable authentication system for MERN applications",
   "type": "module",
   "main": "index.js",
+  "files": [
+  "index.js",
+  "src"
+],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -25,5 +29,13 @@
   "bugs": {
     "url": "https://github.com/RahulMaurya90058/AuthFlow/issues"
   },
-  "homepage": "https://github.com/RahulMaurya90058/AuthFlow#readme"
+  "homepage": "https://github.com/RahulMaurya90058/AuthFlow#readme",
+  "dependencies": {
+    "@getbrevo/brevo": "^6.0.3",
+    "bcryptjs": "^3.0.2",
+    "express": "^5.1.0",
+    "google-auth-library": "^10.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.1"
+  }
 }

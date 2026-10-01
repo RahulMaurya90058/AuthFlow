@@ -1,6 +1,1 @@
-const AuthFlow = {
-  name: "AuthFlow",
-  version: "1.0.0",
-};
-
-export default AuthFlow;
+export { createAuth } from "./src/backend/auth/index.js";
