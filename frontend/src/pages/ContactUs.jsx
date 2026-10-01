@@ -89,7 +89,7 @@ const ContactUs = () => {
       setLoading(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/contact/send",
+        `${import.meta.env.VITE_API_URL}/api/contact/send`,
         {
           method: "POST",
           headers: {

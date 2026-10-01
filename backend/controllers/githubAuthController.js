@@ -12,7 +12,7 @@ export const githubLogin = (req, res) => {
   const githubAuthUrl =
     `https://github.com/login/oauth/authorize` +
     `?client_id=${GITHUB_CLIENT_ID}` +
-    `&redirect_uri=http://localhost:5000/api/auth/github/callback` +
+    `&redirect_uri=${process.env.GITHUB_CALLBACK_URL}` +
     `&scope=user:email`;
 
   return res.redirect(githubAuthUrl);
@@ -205,7 +205,7 @@ export const githubCallback = async (req, res) => {
 
     // ================= REDIRECT =================
     return res.redirect(
-      "http://localhost:5173/profile"
+      `${process.env.FRONTEND_URL}/profile`
     );
   } catch (error) {
     console.error(

@@ -31,7 +31,7 @@ const Profile = () => {
       setError("");
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/profile",
+       `${import.meta.env.VITE_API_URL}/api/auth/profile`,
         {
           method: "GET",
           credentials: "include",
@@ -79,7 +79,7 @@ const Profile = () => {
       setError("");
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/logout",
+        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
         {
           method: "POST",
           credentials: "include",

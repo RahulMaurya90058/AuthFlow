@@ -91,7 +91,7 @@ const VerifyResetOTP = () => {
       setLoading(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/verify-reset-otp",
+        `${import.meta.env.VITE_API_URL}/api/auth/verify-reset-otp`,
         {
           method: "POST",
           headers: {
@@ -141,7 +141,7 @@ const VerifyResetOTP = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/resend-reset-otp",
+        `${import.meta.env.VITE_API_URL}/api/auth/resend-reset-otp`,
         {
           method: "POST",
           headers: {
