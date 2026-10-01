@@ -2,7 +2,7 @@
 
 Reusable authentication system for MERN applications.
 
-AuthFlow provides a ready-to-use authentication backend with email/password authentication, OTP verification, password reset, Google OAuth, GitHub OAuth, JWT-based authentication, protected routes, and contact email functionality.
+AuthFlow provides a ready-to-use authentication backend with email/password authentication, OTP verification, password reset, Google OAuth, GitHub OAuth, JWT-based authentication, protected routes, MongoDB integration, and contact email functionality.
 
 ## Features
 
@@ -22,6 +22,8 @@ AuthFlow provides a ready-to-use authentication backend with email/password auth
 - Contact form email service
 - Local configuration support
 - Reusable Express authentication routes
+- Optional authentication providers
+- Configurable services for different MERN applications
 
 ## Installation
 
@@ -29,28 +31,21 @@ Install AuthFlow in your MERN backend:
 
 ```bash
 npm install @rahulmaurya956945/authflow
-```
+Requirements
+Node.js 18+
+Express
+MongoDB
+Google OAuth credentials (optional)
+GitHub OAuth credentials (optional)
+Brevo account/API key (optional, required only for email features)
+Basic Usage
 
-## Requirements
+Import createAuth:
 
-- Node.js 18+
-- Express
-- MongoDB
-- Google OAuth credentials (optional)
-- GitHub OAuth credentials (optional)
-- Brevo account/API key for email features
-
-## Basic Usage
-
-Import `createAuth`:
-
-```js
 import { createAuth } from "@rahulmaurya956945/authflow";
-```
 
 Create an AuthFlow instance:
 
-```js
 const auth = createAuth({
   mongoUri: process.env.MONGO_URI,
 
@@ -81,15 +76,17 @@ const auth = createAuth({
     process.env.BREVO_SENDER_NAME,
 
   brevoRecipientEmail:
-    process.env.BREVO_SENDER_EMAIL,
+    process.env.BREVO_RECIPIENT_EMAIL,
 });
-```
 
-## Express Integration
+Google, GitHub, and Brevo configuration is optional.
 
-Example `server.js`:
+Only configure the services that your application needs.
 
-```js
+Express Integration
+
+Example server.js:
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -103,6 +100,7 @@ const app = express();
 
 const auth = createAuth({
   mongoUri: process.env.MONGO_URI,
+
   jwtSecret: process.env.JWT_SECRET,
 
   googleClientId:
@@ -130,10 +128,10 @@ const auth = createAuth({
     process.env.BREVO_SENDER_NAME,
 
   brevoRecipientEmail:
-    process.env.BREVO_SENDER_EMAIL,
+    process.env.BREVO_RECIPIENT_EMAIL,
 });
 
-auth.connectDB();
+await auth.connectDB();
 
 app.use(
   cors({
@@ -169,7 +167,7 @@ app.use(
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "API is running",
+    message: "AuthFlow API is running 🚀",
   });
 });
 
@@ -181,13 +179,60 @@ app.listen(PORT, () => {
     `Server running on http://localhost:${PORT}`
   );
 });
-```
+Configuration
 
-## Configuration
+Create a .env file in your application.
 
-Create a `.env` file in your application:
+Required Configuration
 
-```env
+These variables are required for basic AuthFlow functionality:
+
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+Optional: Frontend URL
+
+Configure this when your application uses a frontend or GitHub OAuth:
+
+FRONTEND_URL=http://localhost:5173
+Optional: Google Authentication
+
+Only required if you want to enable Google Login:
+
+GOOGLE_CLIENT_ID=your_google_client_id
+Optional: GitHub Authentication
+
+Only required if you want to enable GitHub Login:
+
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_CALLBACK_URL=http://localhost:5000/api/auth/github/callback
+Optional: Brevo Email
+
+Required for:
+
+Email verification
+Verification OTP
+Password reset OTP
+Password reset emails
+Contact email functionality
+
+Configuration:
+
+BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER_EMAIL=your_verified_sender_email
+BREVO_SENDER_NAME=Your App Name
+Optional: Contact Email Recipient
+
+If you use the contact email functionality, configure the recipient:
+
+BREVO_RECIPIENT_EMAIL=your_recipient_email
+
+AuthFlow does not require Google, GitHub, or Brevo configuration if those features are not being used.
+
+Example .env
+
+A complete configuration may look like:
+
 PORT=5000
 
 MONGO_URI=your_mongodb_connection_string
@@ -200,126 +245,118 @@ GOOGLE_CLIENT_ID=your_google_client_id
 
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
-
 GITHUB_CALLBACK_URL=http://localhost:5000/api/auth/github/callback
 
 BREVO_API_KEY=your_brevo_api_key
 BREVO_SENDER_EMAIL=your_verified_sender_email
 BREVO_SENDER_NAME=Your App Name
-```
+BREVO_RECIPIENT_EMAIL=your_recipient_email
 
-## Authentication Routes
+Never commit real credentials or API keys to GitHub.
+
+Authentication Routes
 
 After mounting:
 
-```js
-app.use("/api/auth", auth.routes.auth);
-```
+app.use(
+  "/api/auth",
+  auth.routes.auth
+);
 
 the following routes become available:
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| POST | `/api/auth/register` | Register user |
-| POST | `/api/auth/verify-email` | Verify email OTP |
-| POST | `/api/auth/resend-otp` | Resend verification OTP |
-| POST | `/api/auth/login` | Login |
-| POST | `/api/auth/forgot-password` | Request password reset |
-| POST | `/api/auth/verify-reset-otp` | Verify reset OTP |
-| POST | `/api/auth/resend-reset-otp` | Resend reset OTP |
-| POST | `/api/auth/reset-password` | Set new password |
-| GET | `/api/auth/profile` | Get authenticated user |
-| POST | `/api/auth/logout` | Logout |
+Method	Endpoint	Purpose
+POST	/api/auth/register	Register user
+POST	/api/auth/verify-email	Verify email OTP
+POST	/api/auth/resend-otp	Resend verification OTP
+POST	/api/auth/login	Login
+POST	/api/auth/forgot-password	Request password reset
+POST	/api/auth/verify-reset-otp	Verify reset OTP
+POST	/api/auth/resend-reset-otp	Resend reset OTP
+POST	/api/auth/reset-password	Set new password
+GET	/api/auth/profile	Get authenticated user
+POST	/api/auth/logout	Logout
+Google Authentication
 
-## Google Authentication
+Google authentication is optional.
 
-Mount:
+If Google credentials are configured, mount:
 
-```js
 app.use(
   "/api/auth",
   auth.routes.google
 );
-```
 
 Endpoint:
 
-```text
 POST /api/auth/google
-```
 
 The frontend sends the Google credential to this endpoint.
 
-## GitHub Authentication
+If Google configuration is not provided, AuthFlow initializes normally and the Google route remains inactive.
 
-Mount:
+GitHub Authentication
 
-```js
+GitHub authentication is optional.
+
+If GitHub credentials are configured, mount:
+
 app.use(
   "/api/auth",
   auth.routes.github
 );
-```
 
 Endpoints:
 
-```text
 GET /api/auth/github
 GET /api/auth/github/callback
-```
 
 The callback URL must match the GitHub OAuth application configuration.
 
-## Contact Route
+If GitHub configuration is not provided, AuthFlow initializes normally and the GitHub routes remain inactive.
 
-Mount:
+Contact Route
 
-```js
+The contact email service is optional.
+
+If Brevo is configured, mount:
+
 app.use(
   "/api/contact",
   auth.routes.contact
 );
-```
 
 Endpoint:
 
-```text
 POST /api/contact/send
-```
 
 Request body:
 
-```json
 {
   "name": "John Doe",
   "email": "john@example.com",
   "message": "Hello!"
 }
-```
-
-## Authentication Cookie
+Authentication Cookie
 
 AuthFlow stores the JWT in an HTTP-only cookie named:
 
-```text
 token
-```
 
 The cookie is used automatically by protected routes.
 
 For frontend requests, credentials should be enabled:
 
-```js
-fetch("http://localhost:5000/api/auth/profile", {
-  credentials: "include",
-});
-```
+fetch(
+  "http://localhost:5000/api/auth/profile",
+  {
+    credentials: "include",
+  }
+);
+Available AuthFlow Instance
 
-## Available AuthFlow Instance
+createAuth() returns:
 
-`createAuth()` returns:
-
-```js
 {
   config,
   connectDB,
@@ -327,50 +364,62 @@ fetch("http://localhost:5000/api/auth/profile", {
   routes,
   controllers
 }
-```
-
-### Database
-
-```js
+Database
 await auth.connectDB();
-```
-
-### Middleware
-
-```js
+Middleware
 auth.middleware.auth
-```
-
-### Routes
-
-```js
+Routes
 auth.routes.auth
 auth.routes.google
 auth.routes.github
 auth.routes.contact
-```
-
-### Controllers
-
-```js
+Controllers
 auth.controllers.auth
 auth.controllers.google
 auth.controllers.github
 auth.controllers.contact
-```
+Optional Providers
 
-## Security
+AuthFlow allows applications to enable only the authentication services they need.
 
-- JWT is stored in an HTTP-only cookie.
-- Passwords are hashed using bcrypt.
-- OTP values are hashed before storage.
-- OTP verification uses an expiration time.
-- Sensitive configuration should be stored in environment variables.
-- Never commit `.env` files or API secrets to GitHub.
+Basic Authentication
 
-## Project Structure
+Requires:
 
-```text
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+Email Authentication
+
+Add:
+
+BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER_EMAIL=your_verified_sender_email
+BREVO_SENDER_NAME=Your App Name
+Google Login
+
+Add:
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GitHub Login
+
+Add:
+
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_CALLBACK_URL=http://localhost:5000/api/auth/github/callback
+
+This makes AuthFlow suitable for applications that do not need every authentication provider.
+
+Security
+JWT is stored in an HTTP-only cookie.
+Passwords are hashed using bcrypt.
+OTP values are hashed before storage.
+OTP verification uses an expiration time.
+Sensitive configuration should be stored in environment variables.
+Never commit .env files or API secrets to GitHub.
+Use HTTPS in production.
+Use secure cookie settings in production.
+Project Structure
 AuthFlow/
 ├── index.js
 ├── package.json
@@ -402,9 +451,7 @@ AuthFlow/
             │   └── otp.js
             ├── config.js
             └── index.js
-```
-
-## License
+License
 
 MIT License
 

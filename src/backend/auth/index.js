@@ -1,5 +1,6 @@
-import { createAuthConfig } from "./config.js";
+import express from "express";
 
+import { createAuthConfig } from "./config.js";
 import { connectAuthDB } from "./config/db.js";
 
 import { createEmailService } from "./utils/email.js";
@@ -51,28 +52,64 @@ const createAuth = (config = {}) => {
   const authConfig = createAuthConfig(config);
 
   // ======================================================
-  // EMAIL SERVICES
+  // OPTIONAL EMAIL SERVICES
   // ======================================================
 
-  const {
-    sendVerificationEmail,
-  } = createEmailService({
-    apiKey: authConfig.brevoApiKey,
-    senderName: authConfig.brevoSenderName,
-    senderEmail:
-      authConfig.brevoSenderEmail,
-  });
+  const emailEnabled =
+    !!authConfig.brevoApiKey &&
+    !!authConfig.brevoSenderEmail;
 
-  const {
-    sendContactEmail,
-  } = createContactEmailService({
-    apiKey: authConfig.brevoApiKey,
-    senderName: authConfig.brevoSenderName,
-    senderEmail:
-      authConfig.brevoSenderEmail,
-    recipientEmail:
-      authConfig.brevoRecipientEmail,
-  });
+  let sendVerificationEmail;
+
+  if (emailEnabled) {
+    const emailService = createEmailService({
+      apiKey: authConfig.brevoApiKey,
+      senderName: authConfig.brevoSenderName,
+      senderEmail: authConfig.brevoSenderEmail,
+    });
+
+    sendVerificationEmail =
+      emailService.sendVerificationEmail;
+  } else {
+    sendVerificationEmail = async () => {
+      throw new Error(
+        "Email verification requires Brevo configuration"
+      );
+    };
+  }
+
+  // ======================================================
+  // OPTIONAL CONTACT EMAIL SERVICE
+  // ======================================================
+
+  const contactEmailEnabled =
+    !!authConfig.brevoApiKey &&
+    !!authConfig.brevoSenderEmail &&
+    !!authConfig.brevoRecipientEmail;
+
+  let sendContactEmail;
+
+  if (contactEmailEnabled) {
+    const contactEmailService =
+      createContactEmailService({
+        apiKey: authConfig.brevoApiKey,
+        senderName:
+          authConfig.brevoSenderName,
+        senderEmail:
+          authConfig.brevoSenderEmail,
+        recipientEmail:
+          authConfig.brevoRecipientEmail,
+      });
+
+    sendContactEmail =
+      contactEmailService.sendContactEmail;
+  } else {
+    sendContactEmail = async () => {
+      throw new Error(
+        "Contact email requires Brevo configuration"
+      );
+    };
+  }
 
   // ======================================================
   // CONTROLLERS
@@ -84,25 +121,55 @@ const createAuth = (config = {}) => {
       sendVerificationEmail,
     });
 
-  const googleAuthController =
-    createGoogleAuthController({
-      googleClientId:
-        authConfig.googleClientId,
-      jwtSecret: authConfig.jwtSecret,
-    });
+  // ======================================================
+  // OPTIONAL GOOGLE AUTH
+  // ======================================================
 
-  const githubAuthController =
-    createGithubAuthController({
-      githubClientId:
-        authConfig.githubClientId,
-      githubClientSecret:
-        authConfig.githubClientSecret,
-      githubCallbackUrl:
-        authConfig.githubCallbackUrl,
-      jwtSecret: authConfig.jwtSecret,
-      frontendUrl:
-        authConfig.frontendUrl,
-    });
+  let googleAuthController = null;
+
+  if (authConfig.googleClientId) {
+    googleAuthController =
+      createGoogleAuthController({
+        googleClientId:
+          authConfig.googleClientId,
+        jwtSecret:
+          authConfig.jwtSecret,
+      });
+  }
+
+  // ======================================================
+  // OPTIONAL GITHUB AUTH
+  // ======================================================
+
+  let githubAuthController = null;
+
+  if (
+    authConfig.githubClientId &&
+    authConfig.githubClientSecret &&
+    authConfig.githubCallbackUrl
+  ) {
+    githubAuthController =
+      createGithubAuthController({
+        githubClientId:
+          authConfig.githubClientId,
+
+        githubClientSecret:
+          authConfig.githubClientSecret,
+
+        githubCallbackUrl:
+          authConfig.githubCallbackUrl,
+
+        jwtSecret:
+          authConfig.jwtSecret,
+
+        frontendUrl:
+          authConfig.frontendUrl,
+      });
+  }
+
+  // ======================================================
+  // CONTACT CONTROLLER
+  // ======================================================
 
   const contactController =
     createContactController({
@@ -127,19 +194,36 @@ const createAuth = (config = {}) => {
     authMiddleware,
   });
 
+  // ======================================================
+  // GOOGLE ROUTES
+  // ======================================================
+
   const googleAuthRoutes =
-    createGoogleAuthRoutes({
-      googleAuth:
-        googleAuthController.googleAuth,
-    });
+    googleAuthController
+      ? createGoogleAuthRoutes({
+          googleAuth:
+            googleAuthController.googleAuth,
+        })
+      : express.Router();
+
+  // ======================================================
+  // GITHUB ROUTES
+  // ======================================================
 
   const githubAuthRoutes =
-    createGithubAuthRoutes({
-      githubLogin:
-        githubAuthController.githubLogin,
-      githubCallback:
-        githubAuthController.githubCallback,
-    });
+    githubAuthController
+      ? createGithubAuthRoutes({
+          githubLogin:
+            githubAuthController.githubLogin,
+
+          githubCallback:
+            githubAuthController.githubCallback,
+        })
+      : express.Router();
+
+  // ======================================================
+  // CONTACT ROUTES
+  // ======================================================
 
   const contactRoutes =
     createContactRoutes({

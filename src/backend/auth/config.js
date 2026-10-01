@@ -42,6 +42,6 @@ export const createAuthConfig = (config = {}) => {
 
     brevoRecipientEmail:
       config.brevoRecipientEmail ||
-      process.env.BREVO_SENDER_EMAIL,
+      process.env.BREVO_RECIPIENT_EMAIL,
   };
 };
