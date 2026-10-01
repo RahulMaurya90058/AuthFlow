@@ -1,0 +1,29 @@
+{
+  "name": "@rahulmaurya956945/authflow",
+  "version": "1.0.0",
+  "description": "Reusable authentication system for MERN applications",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "auth",
+    "authentication",
+    "mern",
+    "jwt",
+    "otp",
+    "google-auth",
+    "github-auth"
+  ],
+  "author": "Rahul Maurya",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RahulMaurya90058/AuthFlow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RahulMaurya90058/AuthFlow/issues"
+  },
+  "homepage": "https://github.com/RahulMaurya90058/AuthFlow#readme"
+}
